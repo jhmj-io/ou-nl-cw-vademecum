@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+
+    <!-- static one page html, css, js -->
+
+    <title>Zotero Citation Style ~ OU NL CWS</title>
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="light dark" />
+
+    <style>
+
+        /* main */
+
+        body {
+            margin: 5%;
+            font-family: Arial, Helvetica, sans-serif;
+            /* background-color: light-dark(white, black); */
+            /* color: light-dark(black, white); */
+        }
+
+        header {
+            margin-bottom: 3%;
+        }
+        article>p>span:nth-child(2) {
+            /* column count */
+            padding-left: 1em;
+            font-size: 1.2em;
+        }
+        article>div {
+            display: flex;
+            align-items: center;
+        }
+        article>div>div {
+            /* right-margin spacer */
+            min-width: 10em;
+        }
+
+        footer {
+            margin-top: 3%;
+        }
+        footer p {
+            display: flex;
+            align-items: center;
+        }
+
+        /* table  */
+        table, th, td {
+            border: 1px solid;
+        }
+        th, td {
+            text-align: left;
+            padding: 0.1em 0.5em 0.1em 0.5em;
+        }
+        td {
+            color: light-dark(slategrey, white);
+        }
+        /* nowrap for col 1 and row 2 */
+        /* th:nth-child(1), tr:nth-child(1)>td {
+            white-space: nowrap;
+        } */
+        th:nth-child(2), td:nth-child(2) {
+            /* column instructions */
+            min-width: 20em;
+            max-width: 20em;
+        }
+
+        /* interactives */
+        select {
+            height: 1.8em;
+            font-size: 1em;
+        }
+
+        a {
+            /* why not :-)) */
+            font-size: 1.1em;
+            text-decoration: none;
+            color: slategrey;
+            padding-left: 0.2em;
+        }
+
+        #version-date {
+            color: red;
+        }
+
+    </style>
+
+<!-- 
+{'name':'Boek','v': ['']},
+{'name':'Artikel','v': ['']},
+{'name':'Overig','v': ['']}, 
+-->
+
+    <script>
+
+        // immutable page texts
+        const texts = new Object();
+        texts["version-date"] = "19 december 2024";
+
+        // Vademecum x Zotero csl story; i.e. sources (Vademecum) and fields (Zotero)
+        const sources = [
+
+        {'name':'Boek','v': ['']},
+{'name':'Boek door één auteur','v': ['Book','1','','','','1','','','','','','','','','','','','','1','1','','','','']},
+{'name':'Boek in tweede of latere druk, e-boek','v': ['Book','1','','','','1','','','','','','','','','','voorbeeld 5 van vademecum wijkt af','','','1','1','','','','']},
+{'name':'Boek zonder vermelding van auteur, jaartal of plaats van uitgave','v': ['Book','2','','','','1','','','','','','','','','','','','','2','2','','','','']},
+{'name':'Boek door twee of drie auteurs','v': ['Book','1','','','','1','','','','','','','','','','','','','1','1','','','','']},
+{'name':'Boek door meer dan drie auteurs','v': ['Book','1','','','','1','','','','','','','','','','','','','1','1','','','','']},
+{'name':'Boek in een serie','v': ['Book','1','','','','1','1','1','','','','','','','','','','','1','1','','','','']},
+{'name':'Boek bestaande uit meerdere delen','v': ['Book Section','1','','','','1','','','1','','','','2','','','2','','','1','1','','','','']},
+{'name':'Bundel van artikelen, samengesteld door één redacteur','v': ['Book','','1','','','1','','','','','','','','','','','','','1','1','','','','']},
+{'name':'Bundel van artikelen, samengesteld door twee redacteuren','v': ['Book','','1','','','1','','','','','','','','','','','','','1','1','','','','']},
+{'name':'Bundel van artikelen, samengesteld door drie redacteuren','v': ['Book','','1','','','1','','','','','','','','','','','','','1','1','','','','']},
+{'name':'Bundel van artikelen, samengesteld door meer dan drie redacteuren','v': ['Book','','1','','','1','','','','','','','','','','','','','1','1','','','','']},
+{'name':'Bronnenuitgave of editie','v': ['Book','2','','1','','1','','','','','','','','','','','','','1','1','','','','']},
+{'name':'Vertaald werk','v': ['Book','1','','','1','1','','','','','','','','','','','','','1','1','','','','']},
+{'name':'Artikel','v': ['']},
+{'name':'Artikel in een bundel','v': ['Book Section','1','','1','','1','','','1','','','','','','','','','','1','1','1','','','']},
+{'name':'Artikel door twee auteurs in een bundel','v': ['Book Section','1','','1','','1','','','1','','','','','','','','','','1','1','1','','','']},
+{'name':'Artikel in een wetenschappelijk tijdschrift','v': ['Journal Article','1','','','','1','','','','1','','','1','0','','','','','1','1','1','','','']},
+{'name':'Artikel in een wetenschappelijk tijdschrift door twee auteurs','v': ['Journal Article','1','','','','1','','','','1','','','1','0','','','','','1','1','1','','','']},
+{'name':'Artikel in een online beschikbaar wetenschappelijk tijdschrift','v': ['Journal Article','1','','','','1','','','','1','','','1','0','','','','','1','1','1','','2','2']},
+{'name':'Publicatie in een verzameld werk','v': ['Book Section','1','','2','','1','jaar oorsponkelijke uitgave','','1','','','','','','','','','','1','1','1','','','']},
+{'name':'Boekbespreking','v': ['Magazine Article','1','','','','handmatig knippen+plakken van de Zotero literatuurlijstreferentie van het boek','','','','1','','','','1','','','','','1','1','1','','','']},
+{'name':'Overig','v': ['']}, 
+{'name':'Tentoonstellings- of museumcatalogus','v': ['Book Section','','1','2','','1','','','2','','','','','','museum','tent.cat. of mus.cat.','','','1','1','','','','']},
+{'name':'Proefschrift/scriptie','v': ['Thesis','1','','','','1','','','','','','','','','','','1','1','1','1','','','','']},
+{'name':'Proefschrift/scriptie online beschikbaar','v': ['Thesis','1','','','','1','','','','','','','','','','','1','1','1','1','','','','2']},
+{'name':'Website, blog, enzovoort (Web Page)','v': ['Web Page','','','','','1','','','','','2','','','','','','','','','','','1','','1']},
+{'name':'Website, blog, enzovoort (Blog Post)','v': ['Blogpost','1','','','','1','','','','','','1','','','','','','','','','','1','','1']},
+{'name':'Krantenartikel','v': ['Newspaper Article','','','','','','','','','','','','','','','','','','','','','','','']},
+{'name':'Rapport of overheidspublicatie','v': ['Report','','','','','','','','','','','','','','','','','','','','','','','']},
+
+{'name':'Kunstwerken','v': ['Artwork','','','','','','','','','','','','','','','','','','','','','','','']},
+{'name':'Gebouw','v': ['Artwork','','','','','','','','','','','','','','','','','','','','','','','']},
+{'name':'Vormgeving','v': ['Artwork','','','','','','','','','','','','','','','','','','','','','','','']},
+
+            ];
+
+        const fields = [
+
+        {'name':'Type','help':`Type; Book, Magazine Article, Journal Article, Web Page, Blog Post`},
+{'name':'Author','help':`Auteur; zie vademecum. Naam volgens kaft of catalogus (Worldcat, Google Books)`},
+{'name':'Editor','help':`Redacteur; van een bundel van artikelen`},
+{'name':'Series Editor','help':`Redacteur; van een bronnenuitgave.`},
+{'name':'Translator','help':`Vertaler; max één`},
+{'name':'Title','help':`Titel; tevens ondertitel. Indien ondertitel dan titel afsluiten met een punt en ondertitel laten beginnen met hoofdletter.`},
+{'name':'Series','help':`Serienaam; eventueel deelnummer in Romeinse cijfers gevolgd door titel van het deel.`},
+{'name':'Series Number','help':`Serienummer`},
+{'name':'Book Title','help':`Bundeltitel;`},
+{'name':'Publication','help':`Tijdschriftnaam; science journal`},
+{'name':'Website Title','help':`Website titel; website naam`},
+
+{'name':'Volume','help':`Jaargang`},
+{'name':'Issue','help':`Nummer van het tijdschrift`},
+{'name':'Publisher','help':`Instelling (museum)`},
+{'name':'Edition','help':`Start linker haakje ( van uitgaveblok. Na edition volgt een ;<br>
+Druk, uitgave of aantal delen:
+<ul>
+<li>Druk: alleen indien niet eerste druk. Cijfer van de druk 🡆 9e druk</li>
+<li>Uitgave: tekst wordt onveranderd overgenomen, zoals: herdruk, e-uitgave, paperbackeditie</li>
+<li>Delen: aanduiding aantal delen, bijvoorbeeld 4 dln.</li>
+</ul>
+kan leeg zijn.`},
+{'name':'Type of thesis','help':`Proefschrift of scriptie`},
+{'name':'University','help':`Universiteit`},
+{'name':'Place','help':`Plaats uitgave; NL vertaling van ... https://namen.taalunie.org/landen`},
+{'name':'Date','help':`Datum uitgave; alleen jaar wordt afgedrukt.
+Afsluitend rechter haakje )`},
+{'name':'Pages','help':`Pagina van - tot`},
+{'name':'Accessed','help':`Geraadpleegd op`},
+{'name':'DOI','help':`DOI; als url`},
+{'name':'URL','help':`URL`},
+
+            ];
+
+
+    </script>
+    
+    <script>
+
+        // system texts
+        // texts["version-date"] = null;
+        texts["th0"] = "Zotero field";
+        texts["th1"] = "Instructie";
+        texts["tdspan1"] = "✔";
+        texts["tdspan2"] = "kan leeg zijn";
+        texts["tdspantitle"] = "iets invullen";
+        texts["source-type"] = "brontype";
+        texts["source-types"] = "brontypen";
+        texts["source-type-all"] = "Alle brontypen";
+        texts["light dark"] = "automatic";
+        texts["light"] = "light";
+        texts["dark"] = "dark";
+
+        // write columns
+        const writeColumns = (r, i, sourcesselected ) => {
+
+            // column = source
+            const rowwithcells = sourcesselected.slice(0,1)
+                .concat(sourcesselected.slice(0,1))
+                .concat(sourcesselected).reduce((a, s, j)=> {
+
+                // console.log(" col", j, s.name, a );
+
+                let c;
+                if ( i==0 || j==0) c = document.createElement("th"); // row 0, col 0
+                else c = document.createElement("td");
+
+                // row: i, col j
+                if (i==0 && j>1 ) c.innerHTML = s.name; // column header 
+                else if (i>0 && j==0 ) c.innerHTML = r.name; // row header
+                else if (i>0 && j==1 ) c.innerHTML = r.help; // row help
+                else if (fields[i-1] && s.v[i-1] ) { // cell help
+                    if (s.v[i-1] == "1") c.innerHTML = "<span title='"+texts["tdspantitle"]+"'>"+texts["tdspan1"]+"</span>";
+                    else if ( ["0","2","?"].indexOf(s.v[i-1])>-1 ) c.innerHTML = "<span title='"+texts["tdspantitle"]+"'>"+texts["tdspan2"]+"</span>";
+                    else c.innerHTML = s.v[i-1];
+                }
+                // else c.className = "diagonalCross"
+
+                a.append(c);
+                return a;
+            }, document.createElement("tr") );
+
+            return rowwithcells;
+
+        };
+
+        
+        // write table -header and -body
+        const writeTable = () => {
+
+            // row = field
+
+            let vademecumselected = document.getElementById("source-select").value;
+            let sourcesselected = sources.filter(s=> s.v[0].length>0 );
+
+            // custom group filters
+            if ( vademecumselected=="Boek") {
+                sourcesselected = sources.filter(s=> !!(s.v[0].match(/book/i)) );
+            }
+            else if ( vademecumselected=="Artikel") {
+                sourcesselected = sources.filter(s=> !!(s.v[0].match(/article/i)) );
+            }
+            else if ( vademecumselected=="Overig") {
+                sourcesselected = sources
+                    .filter(s=> !(s.v[0].match(/(book|article)/i)) )
+                    .filter(s=> s.v[0].length>0 )
+            }
+            // regular filter
+            else if ( sources.find(s => s.name.includes( vademecumselected )) ) 
+                sourcesselected = sources
+                    .filter(s=> s.name.includes( vademecumselected ))
+                    .filter(s=> s.v[0].length>0 );
+            
+
+            const table = fields.slice(0,1)  // header row
+                .concat(fields)
+                .reduce((a, f, i) => {
+
+                // write the colums (the cells); f=field, i=row number, columns=sourcesselected
+                const r = writeColumns(f, i, sourcesselected);
+
+                if (i==0) a.thead.append(r);
+                else a.tbody.append(r);
+
+                return a;
+
+            }, {
+                thead: document.createElement("thead"), 
+                tbody: document.createElement("tbody")
+            });
+
+            // replace / refresh thead and tbody
+            table.thead.setAttribute("id", "thead");
+            document.getElementById("thead").replaceWith(table.thead);
+
+            table.tbody.setAttribute("id", "tbody");
+            document.getElementById("tbody").replaceWith(table.tbody);
+
+            // add single texts
+            document.querySelector("thead tr th:nth-child(1)").innerHTML = texts["th0"];
+            document.querySelector("thead tr th:nth-child(2)").innerHTML = texts["th1"];
+            document.getElementById("version-date").innerHTML = texts["version-date"];
+
+            const sourcetypecount = document.querySelector('table').rows[0].cells.length - 2;
+            document.getElementById("column-count").innerHTML = sourcetypecount;
+            document.getElementById("source-type").innerHTML = (sourcetypecount==1) ? texts["source-type"] : texts["source-types"];
+
+        };
+
+
+        // Vademecum source types
+        const sourcesOptions = ()=>{
+
+            const options = [{ "name" : texts["source-type-all"] }] 
+                .concat(sources).reduce((a,s)=>{
+                    const o = document.createElement("option");
+                    o.innerHTML = s.name;
+                    a.append(o);
+                    return a;
+                }, document.getElementById("source-select"));
+
+            // add dynamics
+            document
+                .getElementById("source-select")
+                .addEventListener("change", writeTable)
+
+            // default source-select = book
+            document
+                .getElementById("source-select")
+                .children[1].selected = true;
+
+        }
+
+
+        // play color-scheme modes
+        const modeToggle = (e) =>{
+
+            const metacolorscheme = document.getElementsByName("color-scheme");
+            if (e && metacolorscheme.length==1){
+                const modes = ["light dark", "light", "dark"];
+                const modei = modes.indexOf(metacolorscheme[0].content);
+                const modenext = (modei==modes.length-1) ? modes[0] : modes[modei+1];
+                metacolorscheme[0].content = modenext;
+            }
+
+            document.getElementById("appearance-mode")
+                    .children[1]
+                    .innerHTML = texts[metacolorscheme[0].content];
+
+        }
+
+
+        const onLoad = async () => {
+
+            // build DOM 
+
+            // Vademecum source types
+            sourcesOptions();
+
+            // show appearance mode
+            modeToggle();
+
+            // wt = write table
+            writeTable();
+
+            console.log("Zotero OU CWS Vademecum.");
+
+        }
+
+
+    </script>
+
+</head>
+
+
+<body onload="onLoad()">
+
+    <header>
+        <h1>Zotero Citation Style ~ Open Universiteit NL Cultuurwetenschappen Vademecum</h1>
+        <p>
+            <span>Datum style: </span><span id="version-date">...</span>
+        </p>
+        <p id="instructies">
+            <span>Installatieinstructies: </span>
+            <a title="pdf" href="./ou-nl-cw-vademecum-zotero.pdf">ou-nl-cw-vademecum-zotero.pdf</a>
+        </p>
+        <p>
+            Wensen, aanvullingen, verbeteringen aub naar: <a href="">joep-ou@jhmj.nl</a>
+        </p>
+        <p>
+            Zie ook discussieform Zotero: <a href="https://forums.zotero.org/discussion/120618/open-universiteit-nl-cultuurwetenschappen-vademecum">Open Universiteit NL Cultuurwetenschappen Vademecum</a>
+        </p>
+
+    </header>
+
+    <article>
+
+        <p>
+            <label>Kies: 
+                <select id="source-select"></select>
+            </label>
+            <span id="column-count">0</span>
+            <span id="source-type">...</span>
+        </p>
+
+        <div> <!-- flex align-items center-->
+            <table> 
+                <thead id="thead"></thead>
+                <tbody id="tbody"></tbody>
+            </table>
+            <div>&nbsp;<!-- right margin spacer --></div>
+        </div>
+
+    </article>
+
+    <footer>
+
+        <p id="style-download">
+            <span>Citation Style voor import in Zotero Settings: </span>
+            <a title="download file" href="./ou-nl-cw-vademecum.csl">ou-nl-cw-vademecum.csl</a>
+        </p>
+
+        <p id="style-download">
+            <span>Collection OU-NL-Vademecum-Voorbeelden voor import in Zotero: </span>
+            <a title="download file" href="./ou-nl-cw-vademecum-voorbeelden.json">ou-nl-cw-vademecum-voorbeelden.json</a>
+        </p>
+
+        <p id="appearance-mode">
+            <span>Current appearance of this page: </span>
+            <a href="#" title="play" onclick="modeToggle(event)">...</a>
+        </p>
+
+    </footer>
+
+</body>
+
+
+</html>
+
